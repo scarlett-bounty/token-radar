@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Token Radar — pre-token protocols ranked by implied launch value</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <div class="mark" aria-hidden="true"><span class="ring"></span><span class="dot"></span></div>
+    <div>
+      <h1>TOKEN RADAR</h1>
+      <p class="tag">Pre-token protocols, ranked by what a launch would be worth.</p>
+    </div>
+  </div>
+  <dl class="stats" id="stats"></dl>
+</header>
+
+<nav class="tabs" id="tabs">
+  <button data-view="board" class="on">Board</button>
+  <button data-view="live">Live tokens</button>
+  <button data-view="model">How the model works</button>
+</nav>
+
+<section class="controls" id="controls">
+  <label class="search">Search
+    <input id="q" type="search" placeholder="protocol name or slug" autocomplete="off">
+  </label>
+  <label>Category
+    <select id="cat"><option value="">All categories</option></select>
+  </label>
+  <label>Sort by
+    <select id="sort">
+      <option value="value">Implied value</option>
+      <option value="tvl">TVL</option>
+      <option value="growth">7-day change</option>
+      <option value="age">Age (oldest first)</option>
+      <option value="name">Name A–Z</option>
+    </select>
+  </label>
+  <label class="check"><input id="wl" type="checkbox"> Watchlist only</label>
+  <span class="count" id="count"></span>
+</section>
+
+<section class="detail" id="detail" hidden></section>
+
+<main>
+  <table id="board">
+    <thead>
+      <tr>
+        <th class="num">#</th>
+        <th>Protocol</th>
+        <th>Category</th>
+        <th>Chains</th>
+        <th class="num">TVL</th>
+        <th class="num">7d</th>
+        <th class="num">Age</th>
+        <th class="num">Implied value</th>
+      </tr>
+    </thead>
+    <tbody id="rows"></tbody>
+  </table>
+
+  <table id="livetable" hidden>
+    <thead>
+      <tr>
+        <th>Protocol</th>
+        <th>Category</th>
+        <th>Chains</th>
+        <th class="num">TVL</th>
+        <th class="num">Market cap</th>
+        <th class="num">7d</th>
+      </tr>
+    </thead>
+    <tbody id="liverows"></tbody>
+  </table>
+
+  <section id="modelpage" hidden>
+    <h2>How the model works <span class="ver" id="modelver"></span></h2>
+    <p>Every number on this board is derived from the sealed snapshot's own figures. No protocol
+    name is ever special-cased: the same function scores every row.</p>
+    <ol class="formula">
+      <li><b>Peer multiple.</b> For each category, the median market-cap / TVL of its live-token
+      protocols — the multiple the market already pays for a token against the value locked in its
+      protocol — shrunk toward the global median when the category has few live peers, and read as
+      the global median when the category has fewer than three live peers at all: one or two peers
+      cannot price a category. The multiple is clamped to 0.05 – 0.80.</li>
+      <li><b>Base.</b> TVL × peer multiple.</li>
+      <li><b>Growth.</b> × (1 + 0.30 × tanh(7-day TVL change / 40)), change clamped to −50% … +100%.
+      No reported change reads as neutral.</li>
+      <li><b>Maturity.</b> × (0.85 + 0.30 × min(age in days, 1460) / 1460). A protocol that has run
+      up to four years with no token earns up to a 15% premium; an unknown listing date reads as
+      365 days.</li>
+      <li><b>Breadth.</b> × (1 + 0.02 × min(chains − 1, 4)). A small premium for running on more chains.</li>
+    </ol>
+    <p>Implied value = base × growth × maturity × breadth, rounded to whole dollars.</p>
+    <h3>What the board covers</h3>
+    <p>The watchlist is the floor, never the ceiling: the board ranks all 40 watchlist protocols
+    plus every other rankable pre-token protocol below the $50M floor — pre-token, not an exchange,
+    not a bridge, liquid-staking or restaking product, not a versioned pool, not a wrapped or
+    staked product of a token that already trades. Above the floor the radar follows the watchlist
+    exactly, because the house's watchlist rule also reads each protocol's parent record, a field
+    the snapshot does not carry: the other above-floor protocols are arms of another protocol, not
+    standalone launches. Live-token protocols are kept apart on the Live tokens tab with the
+    market's own values (market cap), never mixed into the ranked board.</p>
+    <p>Say a protocol <i>records</i> no token, never that it has none: a protocol on the list may
+    still hold a token its record does not carry. The board states an implied value; it does not
+    predict whether or when a token is issued.</p>
+    <h3>Model lab</h3>
+    <p>Move the weights and the board re-ranks live, from the same snapshot figures. The submitted
+    board uses the defaults below.</p>
+    <div class="lab">
+      <label>Growth weight <output id="gwOut">0.30</output>
+        <input id="gw" type="range" min="0" max="0.6" step="0.05" value="0.3">
+      </label>
+      <label>Maturity range <output id="mwOut">0.30</output>
+        <input id="mw" type="range" min="0" max="0.6" step="0.05" value="0.3">
+      </label>
+      <button id="resetLab" type="button">Reset to defaults</button>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <p id="foot"></p>
+</footer>
+
+<script src="../data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
